@@ -244,7 +244,15 @@ async function triggerETLProcess() {
             body: formData
         });
 
-        const data = await response.json();
+        let data;
+        const cType = response.headers.get("content-type") || "";
+        if (cType.includes("application/json")) {
+            data = await response.json();
+        } else {
+            const rawText = await response.text();
+            throw new Error(`Respuesta inesperada del servidor (${response.status}): ${rawText.replace(/<[^>]+>/g, ' ').slice(0, 150).trim()}`);
+        }
+
         if (!response.ok) {
             throw new Error(data.error || "Error al procesar los archivos");
         }
@@ -262,7 +270,15 @@ async function loadSampleDemoData() {
         const response = await fetch("/api/load-sample-data", {
             method: "POST"
         });
-        const data = await response.json();
+        let data;
+        const cType = response.headers.get("content-type") || "";
+        if (cType.includes("application/json")) {
+            data = await response.json();
+        } else {
+            const rawText = await response.text();
+            throw new Error(`Respuesta inesperada del servidor (${response.status}): ${rawText.replace(/<[^>]+>/g, ' ').slice(0, 150).trim()}`);
+        }
+
         if (!response.ok) {
             throw new Error(data.error || "Error al cargar datos de muestra");
         }

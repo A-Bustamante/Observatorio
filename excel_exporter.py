@@ -2,6 +2,7 @@ from io import BytesIO
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
+from openpyxl.utils.dataframe import dataframe_to_rows
 
 def build_consolidated_clean_excel(cleaned_dict: dict, tracker, metrics: dict) -> bytes:
     """
@@ -184,34 +185,10 @@ def build_consolidated_clean_excel(cleaned_dict: dict, tracker, metrics: dict) -
             cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=False)
             cell.border = border_cell
 
-        # Escribir filas
-        for row_idx, row_data in enumerate(df.itertuples(index=False), start=5):
-            for col_idx, val in enumerate(row_data, start=1):
-                # Conversión si es numpy o na
-                val_to_write = val
-                if val_to_write is None or str(val_to_write).lower() in ['nan', '<na>', 'nat']:
-                    val_to_write = ""
-                
-                cell = ws.cell(row=row_idx, column=col_idx, value=val_to_write)
-                cell.font = font_data
-                cell.border = border_cell
-                
-                # Formatos de celda según tipo
-                col_name_lower = cols[col_idx - 1].lower()
-                if isinstance(val, (int, float)) and any(w in col_name_lower for w in ["monto", "valor", "pago"]):
-                    cell.number_format = '"$"#,##0.00'
-                    cell.alignment = Alignment(horizontal="right", vertical="center")
-                elif isinstance(val, (int, float)) and "calificacion" in col_name_lower:
-                    cell.number_format = '0.00'
-                    cell.alignment = Alignment(horizontal="right", vertical="center")
-                elif isinstance(val, (int, float)):
-                    cell.number_format = '#,##0'
-                    cell.alignment = Alignment(horizontal="right", vertical="center")
-                else:
-                    cell.alignment = Alignment(horizontal="left", vertical="center")
-
-                if row_idx % 2 == 1:
-                    cell.fill = fill_zebra
+        # Escribir filas optimizado en alta velocidad con dataframe_to_rows
+        for row_tuple in dataframe_to_rows(df, index=False, header=False):
+            cleaned_row = ["" if (val is None or str(val).lower() in ['nan', '<na>', 'nat']) else val for val in row_tuple]
+            ws.append(cleaned_row)
 
         # Filtro automático
         if len(cols) > 0 and len(df) > 0:
@@ -222,7 +199,7 @@ def build_consolidated_clean_excel(cleaned_dict: dict, tracker, metrics: dict) -
         for col_idx, col_name in enumerate(cols, start=1):
             col_letter = get_column_letter(col_idx)
             max_len = len(str(col_name))
-            sample_rows = df[col_name].dropna().astype(str).head(50)
+            sample_rows = df[col_name].dropna().astype(str).head(30)
             if not sample_rows.empty:
                 max_content_len = sample_rows.map(len).max()
                 max_len = max(max_len, max_content_len)

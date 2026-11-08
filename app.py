@@ -10,6 +10,14 @@ from database_manager import save_clean_data_to_db, get_db_stats, DB_FILE
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50 MB límite
 
+@app.errorhandler(500)
+def handle_500_error(e):
+    return jsonify({"error": f"Error interno en el servidor: {str(e)}"}), 500
+
+@app.errorhandler(413)
+def handle_413_error(e):
+    return jsonify({"error": "Los archivos enviados exceden el límite de tamaño permitido (50 MB)."}), 413
+
 # Almacén en memoria de resultados procesados por sesión
 PROCESSED_SESSIONS = {}
 
@@ -58,13 +66,13 @@ def api_process_etl():
         processor = ETLProcessor()
         cleaned_dict, tracker, metrics = processor.process_all(file_dict)
         
-        # Generar Excel en memoria
-        excel_bytes = build_consolidated_clean_excel(cleaned_dict, tracker, metrics)
         session_id = str(uuid.uuid4())
         
-        # Guardar en caché para descarga
+        # Guardar en caché para descarga diferida (on-demand) para acelerar respuesta HTTP y evitar timeouts
         PROCESSED_SESSIONS[session_id] = {
-            "excel_bytes": excel_bytes,
+            "cleaned_dict": cleaned_dict,
+            "tracker": tracker,
+            "metrics": metrics,
             "filename": "Datos_Limpios_Consolidados_ETL.xlsx"
         }
 
@@ -123,11 +131,12 @@ def api_load_sample_data():
     try:
         processor = ETLProcessor()
         cleaned_dict, tracker, metrics = processor.process_all(file_dict)
-        excel_bytes = build_consolidated_clean_excel(cleaned_dict, tracker, metrics)
         
         session_id = str(uuid.uuid4())
         PROCESSED_SESSIONS[session_id] = {
-            "excel_bytes": excel_bytes,
+            "cleaned_dict": cleaned_dict,
+            "tracker": tracker,
+            "metrics": metrics,
             "filename": "Datos_Limpios_Consolidados_ETL.xlsx"
         }
 
@@ -164,6 +173,14 @@ def api_download_clean_excel(session_id):
         return "El archivo solicitado ya no está disponible o la sesión expiró. Por favor vuelva a procesar.", 404
     
     item = PROCESSED_SESSIONS[session_id]
+    # Generación diferida (lazy evaluation) para máxima velocidad de respuesta en el pipeline
+    if "excel_bytes" not in item:
+        item["excel_bytes"] = build_consolidated_clean_excel(
+            item["cleaned_dict"],
+            item["tracker"],
+            item["metrics"]
+        )
+
     return send_file(
         BytesIO(item["excel_bytes"]),
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
