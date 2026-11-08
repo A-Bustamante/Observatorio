@@ -1,0 +1,8 @@
+id_estudiante,codigo_estudiantil,programa,tipo_beneficio,estrato_socioeconomico,condicion_especial,fecha_registro,asistencia_talleres,estado_beneficio
+101,EST-101,Ing. Inf.,subsidio alimentario,Estrato 2,,01/02/2024,5,ACTIVO
+102,EST-102,MED,BECA EXCELENCIA,3,desplazamiento,2024-02-05,8,activo
+103,EST-103,ADM,monitoria academica,DOS,,10/02/2024,3,ACTIVO
+104,EST-104,T. Social,deporte formativo,Estrato 4,DEPORTISTA DESTACADO,2024-02-12,12,ACTIVO
+105,EST-105,PSI,apoyo psicologico,1,,2024-02-15,-2,EN SEGUIMIENTO
+106,EST-106,IND,subsidio transporte,estrato uno,POBLACION INDIGENA,2024-02-18,4,ACTIVO
+101,EST-101,Ing. Inf.,subsidio alimentario,Estrato 2,,01/02/2024,5,ACTIVO

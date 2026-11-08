@@ -1,0 +1,7 @@
+id_registro_moodle,codigo_estudiantil,codigo_curso,nombre_curso,ultimo_acceso_plataforma,tareas_entregadas,calificacion_promedio,tiempo_sesion_minutos,estado_participacion
+501,EST-101,INF-301,  Bases de Datos I ,12/03/2024,10,4.5,450.5,ACTIVO
+502,EST-102,MED-204,Anatomia Humana,2024-03-14,14,95.0,820.0,ACTIVO
+503,EST-103,ADM-102,Contabilidad Financiera,10/03/2024,6,"3,8",210.0,REGULAR
+504,EST-104,DER-201,Derecho Constitucional,15/03/2024,12,4.8,615.2,ACTIVO
+505,EST-105,PSI-105,Psicologia General,01/03/2024,2,1.5,-30.0,EN RIESGO
+506,EST-106,IND-302,Investigacion de Operaciones,14/03/2024,8,,340.0,ACTIVO
