@@ -278,8 +278,23 @@ def api_db_query():
             total = cursor.fetchone()[0]
             cursor.execute(f"SELECT * FROM {table} LIMIT ? OFFSET ?", [per_page, offset])
 
-        rows = [dict(row) for row in cursor.fetchall()]
+        raw_rows = [dict(row) for row in cursor.fetchall()]
         conn.close()
+
+        # Anonimización / Enmascaramiento de datos personales en la tabla Bienestar (Ley 1581 / Habeas Data)
+        if table == 'bienestar':
+            rows = []
+            for r in raw_rows:
+                row_copy = dict(r)
+                if 'documento_identidad' in row_copy and row_copy['documento_identidad']:
+                    doc = str(row_copy['documento_identidad']).strip()
+                    row_copy['documento_identidad'] = doc[:2] + '******' + doc[-2:] if len(doc) > 4 else '******'
+                if 'nombre_completo' in row_copy and row_copy['nombre_completo']:
+                    name_str = str(row_copy['nombre_completo']).strip()
+                    row_copy['nombre_completo'] = ' '.join([p[0].upper() + '***' for p in name_str.split() if p])
+                rows.append(row_copy)
+        else:
+            rows = raw_rows
 
         total_pages = max(1, (total + per_page - 1) // per_page)
         return jsonify({

@@ -78,7 +78,10 @@ async function loadDatabaseTable(resetPage = true) {
         const start = (dbCurrentPage - 1) * 20 + 1;
         const end = Math.min(dbCurrentPage * 20, dbCurrentTotal);
         const displayEnd = dbCurrentTotal === 0 ? 0 : end;
-        statsLabel.textContent = `Mostrando ${dbCurrentTotal === 0 ? 0 : start}–${displayEnd} de ${dbCurrentTotal} registros en "${data.table}"${search ? ' (búsqueda activa)' : ''}`;
+        const privacyBadge = data.table === 'bienestar' 
+            ? ' <span class="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200"><i class="fa-solid fa-user-shield"></i> Datos Personales Anonimizados (Habeas Data)</span>' 
+            : '';
+        statsLabel.innerHTML = `Mostrando ${dbCurrentTotal === 0 ? 0 : start}–${displayEnd} de ${dbCurrentTotal} registros en "${data.table}"${search ? ' (búsqueda activa)' : ''}${privacyBadge}`;
 
         // Pagination controls
         document.getElementById('db-page-info').textContent = `Página ${dbCurrentPage} de ${dbCurrentTotalPages}`;
